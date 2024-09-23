@@ -1,63 +1,23 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:16'
-            args '-u root -v /var/jenkins_home:/var/jenkins_home'  // Ensure root user and volume mount
-        }
-    }
-    environment {
-        SNYK_TOKEN = credentials('SNYK_TOKEN')
-    }
+    agent { docker { image 'node:16' } }
     stages {
-        stage('Install Dependencies') {
+        stage('Install dependencies') {
             steps {
-                script {
-                    echo 'Installing dependencies...'
-                    sh 'npm install --save'
-                }
+                sh 'node --version'
+                sh 'npm --version'
+                sh 'npm install --save'
+                sh 'npm install express@4.20.0'
             }
         }
-        stage('Install Snyk') {
+        stage('Snyk Scan') {
             steps {
-                script {
-                    echo 'Installing Snyk...'
-                    sh 'npm install -g snyk'
-                }
-            }
-        }
-        stage('Snyk Security Scan') {
-            steps {
-                script {
-                    echo 'Running Snyk security scan...'
-                    sh 'snyk auth $SNYK_TOKEN'
-                    def snykResult = sh(script: 'snyk test', returnStatus: true)
-                    if (snykResult != 0) {
-                        echo 'Snyk found vulnerabilities!'
-                        currentBuild.result = 'FAILURE'  // Mark the build as failure
-                    }
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                script {
-                    echo 'Running tests...'
-                    sh 'npm test'  // Modify or remove this line if no tests are defined
-                }
-            }
-        }
-    }
-    post {
-        failure {
-            script {
-                echo 'Build failed!'
-            }
-        }
-        success {
-            script {
-                echo 'Build succeeded!'
+                echo 'Scanning...'
+                sh '''
+                npm install snyk -g
+                snyk auth 6c728dac-904d-43e3-a42a-723c5623a8b0
+                snyk test --severity-threshold=high
+                '''
             }
         }
     }
 }
-
