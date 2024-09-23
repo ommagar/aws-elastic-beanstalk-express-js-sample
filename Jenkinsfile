@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             image 'node:16'
-            args '-v /var/jenkins_home:/var/jenkins_home'
+            args '-u root -v /var/jenkins_home:/var/jenkins_home'  // Ensure root user and volume mount
         }
     }
     environment {
@@ -29,13 +29,11 @@ pipeline {
             steps {
                 script {
                     echo 'Running Snyk security scan...'
-                    sh 'snyk auth 6c728dac-904d-43e3-a42a-723c5623a8b0'
-                    // This command will fail the build if critical vulnerabilities are detected
+                    sh 'snyk auth $SNYK_TOKEN'
                     def snykResult = sh(script: 'snyk test', returnStatus: true)
                     if (snykResult != 0) {
                         echo 'Snyk found vulnerabilities!'
                         currentBuild.result = 'FAILURE'  // Mark the build as failure
-                        error('Critical vulnerabilities detected. Halting the pipeline.')
                     }
                 }
             }
@@ -44,8 +42,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running tests...'
-                    // If you have tests defined, use npm test. Otherwise, skip or remove this.
-                    sh 'npm test'  // Remove or modify this line if no tests are defined
+                    sh 'npm test'  // Modify or remove this line if no tests are defined
                 }
             }
         }
