@@ -2,6 +2,7 @@ pipeline {
     agent {
         docker {
             image 'node:16'
+            args '-v /var/jenkins_home:/var/jenkins_home'
         }
     }
     environment {
