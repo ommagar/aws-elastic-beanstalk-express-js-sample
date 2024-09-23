@@ -2,7 +2,6 @@ pipeline {
     agent {
         docker {
             image 'node:16'
-            label 'docker'
         }
     }
     environment {
@@ -29,8 +28,14 @@ pipeline {
             steps {
                 script {
                     echo 'Running Snyk security scan...'
-                    sh 'snyk auth $SNYK_TOKEN'
-                    sh 'snyk test || true'  // Prevent build failure on vulnerabilities
+                    sh 'snyk auth 6c728dac-904d-43e3-a42a-723c5623a8b0'
+                    // This command will fail the build if critical vulnerabilities are detected
+                    def snykResult = sh(script: 'snyk test', returnStatus: true)
+                    if (snykResult != 0) {
+                        echo 'Snyk found vulnerabilities!'
+                        currentBuild.result = 'FAILURE'  // Mark the build as failure
+                        error('Critical vulnerabilities detected. Halting the pipeline.')
+                    }
                 }
             }
         }
@@ -57,3 +62,4 @@ pipeline {
         }
     }
 }
+
