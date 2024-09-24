@@ -61,7 +61,7 @@ pipeline {
         }
         failure {
             // On failure, make sure that failure logs are archived and accessible
-            echo 'Build failed! Archiving logs...'
+            echo 'Build failed! Archiving logs....'
         }
         success {
             // On success, display a success message
